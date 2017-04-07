@@ -1,0 +1,473 @@
+<html><head></head><body><div class="apidocDiv">
+<style>
+/*csslint
+*/
+.apidocDiv {
+    background: #fff;
+    font-family: Arial, Helvetica, sans-serif;
+}
+.apidocDiv a[href] {
+    color: #33f;
+    font-weight: bold;
+    text-decoration: none;
+}
+.apidocDiv a[href]:hover {
+    text-decoration: underline;
+}
+.apidocCodeCommentSpan {
+    background: #bbf;
+    color: #000;
+    display: block;
+}
+.apidocCodeKeywordSpan {
+    color: #d00;
+    font-weight: bold;
+}
+.apidocCodePre {
+    background: #eef;
+    border: 1px solid;
+    color: #777;
+    padding: 5px;
+    white-space: pre-wrap;
+}
+.apidocFooterDiv {
+    margin-top: 20px;
+    text-align: center;
+}
+.apidocModuleLi {
+    margin-top: 10px;
+}
+.apidocSectionDiv {
+    border-top: 1px solid;
+    margin-top: 20px;
+}
+.apidocSignatureSpan {
+    color: #777;
+    font-weight: bold;
+}
+</style>
+<h1>api documentation for
+    <a href="http://www.github.com/nhunzaker/speakeasy">speakeasy-nlp (v0.2.12)</a>
+</h1>
+<h4>A simple natural language processor for node javascript.</h4>
+<div class="apidocSectionDiv"><a href="#apidoc.tableOfContents" id="apidoc.tableOfContents"><h1>table of contents</h1></a><ol>
+
+    <li class="apidocModuleLi"><a href="#apidoc.module.speakeasy-nlp">module speakeasy-nlp</a><ol>
+
+        <li>
+
+            <a class="apidocElementLiA" href="#apidoc.element.speakeasy-nlp.classify">
+            function <span class="apidocSignatureSpan">speakeasy-nlp.</span>classify
+            <span class="apidocSignatureSpan">(speech, debug)</span>
+            </a>
+
+        </li>
+
+        <li>
+
+            <a class="apidocElementLiA" href="#apidoc.element.speakeasy-nlp.closest">
+            function <span class="apidocSignatureSpan">speakeasy-nlp.</span>closest
+            <span class="apidocSignatureSpan">(string, words)</span>
+            </a>
+
+        </li>
+
+        <li>
+
+            <span class="apidocSignatureSpan">object <span class="apidocSignatureSpan">speakeasy-nlp.</span>sentiment</span>
+
+        </li>
+
+    </ol></li>
+
+    <li class="apidocModuleLi"><a href="#apidoc.module.speakeasy-nlp.sentiment">module speakeasy-nlp.sentiment</a><ol>
+
+        <li>
+
+            <a class="apidocElementLiA" href="#apidoc.element.speakeasy-nlp.sentiment.analyze">
+            function <span class="apidocSignatureSpan">speakeasy-nlp.sentiment.</span>analyze
+            <span class="apidocSignatureSpan">(phrase)</span>
+            </a>
+
+        </li>
+
+        <li>
+
+            <a class="apidocElementLiA" href="#apidoc.element.speakeasy-nlp.sentiment.negativity">
+            function <span class="apidocSignatureSpan">speakeasy-nlp.sentiment.</span>negativity
+            <span class="apidocSignatureSpan">(phrase)</span>
+            </a>
+
+        </li>
+
+        <li>
+
+            <a class="apidocElementLiA" href="#apidoc.element.speakeasy-nlp.sentiment.positivity">
+            function <span class="apidocSignatureSpan">speakeasy-nlp.sentiment.</span>positivity
+            <span class="apidocSignatureSpan">(phrase)</span>
+            </a>
+
+        </li>
+
+    </ol></li>
+
+</ol></div>
+
+<div class="apidocSectionDiv">
+<h1><a href="#apidoc.module.speakeasy-nlp" id="apidoc.module.speakeasy-nlp">module speakeasy-nlp</a></h1>
+
+
+    <h2>
+        <a href="#apidoc.element.speakeasy-nlp.classify" id="apidoc.element.speakeasy-nlp.classify">
+        function <span class="apidocSignatureSpan">speakeasy-nlp.</span>classify
+        <span class="apidocSignatureSpan">(speech, debug)</span>
+        </a>
+    </h2>
+    <ul>
+    <li>description and source-code<pre class="apidocCodePre">function classify(speech, debug) {
+  var text = speech || process.argv.slice(2).join(' ')
+  var words = lexer.lex(text)
+  var tagged = []
+  var action = null
+  var subject = null
+  var owner = null
+
+  // PREPROCESSING
+  // -------------------------------------------------- //
+
+  // Auto correct for missing punctuation
+  if (getType(words.slice(-1)[0]) !== '.') {
+    words.push('.')
+  }
+
+  // Classify!
+  // -------------------------------------------------- //
+
+  tagged = tagger.tag(words)
+
+  if (debug) console.log(words)
+  if (debug) console.log(tagged)
+
+  var verbs = getTypes(tagged, 'VB')
+  var nouns = getTypes(tagged, 'NN')
+  var pronouns = getTypes(tagged, 'PRP') // finds all posessive pronouns
+  var actions = getTypes(tagged, 'W')
+  var adjectives = getTypes(tagged, 'JJ')
+  var preps = getTypes(tagged, 'IN')
+  var determiners = getTypes(tagged, 'DT')
+  var to = getTypes(tagged, 'TO')
+
+  // ACTION
+  // Answers : "What should the nodebot do after given a
+  // command"
+  // -------------------------------------------------- //
+
+  // Are there known action words present?
+  if (actions.length &gt; 0) {
+    action = actions[0]
+    // Are there base verbs present? Then it's probably
+    // the first verb
+  } else if (getTypes(tagged, 'VB', true).length &gt; 0) {
+    action = getTypes(tagged, 'VB', true)[0]
+    // If there are nouns and prepositions then the action
+    // is the first noun
+    // ex: Repeat that last action
+  } else if (nouns.length &gt; 0 &amp;&amp; preps.length &gt; 0) {
+    action = nouns[0]
+    // Are there at least any adjectives that might work?
+  } else if (adjectives.length &gt; 0) {
+    action = adjectives[0]
+  }
+
+  // Lowercase the action if we find one
+  action = (action) ? action.toLowerCase() : action
+
+  // OWNERSHIP
+  // Answers : "Who is associated with the target of the
+  // action?"
+  // -------------------------------------------------- //
+
+  // If there is posessive pronouns and we have an action, then
+  // the owner is the last posessive word
+  if (pronouns.length &gt; 0 &amp;&amp; action) {
+    // The answer must begin where the action starts
+    // ex: "Do you know [What time it is?]
+    var answer = words.slice(words.indexOf(action))
+    var lastPro = pronouns.slice(-1)[0]
+    if (answer.indexOf(lastPro) &gt; 0 || getTypes(answer, 'VB').length === 0) {
+      owner = lastPro
+    } else {
+      owner = getBetween(answer, ['DT', 'TO'], '.')
+      owner = stripTypes(owner, ['.', 'VB', 'VBZ']).join(' ')
+    }
+    // No ? Let's try between a preposition and
+    // determiners/nouns
+    // Example: "Compile all javascript as application.js"
+  } else if (determiners.length &gt; 0 &amp;&amp; preps.length &gt; 0) {
+    var prepIndex = words.indexOf(preps[0])
+
+    owner = words.slice(prepIndex + 1, -1).join(' ')
+    // Hmm, now let's try between the action and the word "to"
+  } else if (to.length &gt; 0) {
+    owner = getBetween(words, 'VB', 'TO').slice(0, -1).join(' ')
+    // At this point, we can really only guess that
+    // the owner is between the verb and the end of the
+    // statement
+  } else if (verbs.length &gt; 0) {
+    var self = nouns.filter(function (word) {
+      return word.match(/^i$/i)
+    })
+
+    if (self.length) {
+      owner = self.slice(0)
+    } else {
+      owner = getBetween(words, ['VBZ', 'VBP'], ['.']).slice(0, -1)
+    }
+
+    // Do we have the word "I" in here?
+    if (owner.indexOf('I') === 0) {
+      owner = owner.slice(0, 1)
+    }
+
+    // Strip accidental determinates and punctuation
+    owner = stripTypes(owner, ['DT', '.']).join(' ')
+  }
+
+  // SUBJECT
+  // Answers : "What is this statement about?"
+  // -------------------------------------------------- //
+  if (getType(words[0]) === 'VBZ' &amp;&amp; words.indexOf(action) === words.length - 2) {
+    subject = words.slice(1, -2).join(' ').trim()
+  } else if (determiners.length === 0 &amp;&amp; preps.length === 0 &amp;&amp; getType(action) === 'VB') {
+    subject = words.slice(1, -1).join(' ')
+    // If ownership and there are prepositions, scan for words bteween
+    // determinates and posessive words, and prepositions
+  } else if (preps.length &gt; 0) {
+    if (preps.length &gt; 1 || determiners.leng ...</pre></li>
+    <li>example usage<pre class="apidocCodePre">...
+
+``` javascript
+
+var speak = require("./speakeasy-nlp");
+
+// Analyze sentences at a basic level
+// ------------------------------------- //
+speak.<span class="apidocCodeKeywordSpan">classify</span>("What is your name?")             //=&gt; { action: "
+what", owner: "listener", subject: "name" }
+speak.classify("Do you know what time it is?")   //=&gt; { action: "what", owner: "it", subject: &amp;#
+x22;time" }
+
+// Sentiment analysis
+// ------------------------------------- //
+speak.sentiment.negativity("I hate your guts")   //=&gt; { score: 1, words: [hate] }
+speak.sentiment.positivity("I love you")         //=&gt; { score: 1, words: [love] }
+...</pre></li>
+    </ul>
+
+
+
+    <h2>
+        <a href="#apidoc.element.speakeasy-nlp.closest" id="apidoc.element.speakeasy-nlp.closest">
+        function <span class="apidocSignatureSpan">speakeasy-nlp.</span>closest
+        <span class="apidocSignatureSpan">(string, words)</span>
+        </a>
+    </h2>
+    <ul>
+    <li>description and source-code<pre class="apidocCodePre">closest = function (string, words) {
+
+    var shortest = words.toString().length
+    ,   bestFit  = "";
+
+    if (typeof words === 'string') {
+        words = lexer.lex(words);
+    }
+
+    words.forEach(function(word) {
+
+        var distance = lev(string, word);
+
+        if (distance &lt; shortest) {
+            bestFit  = word;
+            shortest = distance;
+        }
+
+    });
+
+    return bestFit;
+}</pre></li>
+    <li>example usage<pre class="apidocCodePre">...
+
+speak.sentiment.analyze("I love you, but you smell something aweful")
+// (Negative scores dictate a stronger influence of negative words)
+//=&gt; { score: -1, positive: { ... }, negative: { ... } }
+
+// Closest word
+// ------------------------------------- //
+speak.<span class="apidocCodeKeywordSpan">closest</span>("node", ["foo", "nodejs", "baz"])     //=&amp;#
+x3e; "nodejs"
+
+```
+
+
+## Philosophy
+
+The goal of this project is not to be the next final solution for natural language processing. There are plenty of
+...</pre></li>
+    </ul>
+
+
+
+
+</div>
+
+<div class="apidocSectionDiv">
+<h1><a href="#apidoc.module.speakeasy-nlp.sentiment" id="apidoc.module.speakeasy-nlp.sentiment">module speakeasy-nlp.sentiment</a></h1>
+
+
+    <h2>
+        <a href="#apidoc.element.speakeasy-nlp.sentiment.analyze" id="apidoc.element.speakeasy-nlp.sentiment.analyze">
+        function <span class="apidocSignatureSpan">speakeasy-nlp.sentiment.</span>analyze
+        <span class="apidocSignatureSpan">(phrase)</span>
+        </a>
+    </h2>
+    <ul>
+    <li>description and source-code<pre class="apidocCodePre">function analyze(phrase) {
+  var pos = positivity(phrase)
+  var neg = negativity(phrase)
+
+  return {
+    score: pos.score - neg.score,
+    comparative: pos.comparative - neg.comparative,
+    positive: pos,
+    negative: neg
+  }
+}</pre></li>
+    <li>example usage<pre class="apidocCodePre">...
+speak.classify("Do you know what time it is?")   //=&gt; { action: "what", owner: "it", subject: &amp;#
+x22;time" }
+
+// Sentiment analysis
+// ------------------------------------- //
+speak.sentiment.negativity("I hate your guts")   //=&gt; { score: 1, words: [hate] }
+speak.sentiment.positivity("I love you")         //=&gt; { score: 1, words: [love] }
+
+speak.sentiment.<span class="apidocCodeKeywordSpan">analyze</span>("I love you, but you smell something aweful")
+// (Negative scores dictate a stronger influence of negative words)
+//=&gt; { score: -1, positive: { ... }, negative: { ... } }
+
+// Closest word
+// ------------------------------------- //
+speak.closest("node", ["foo", "nodejs", "baz"])     //=&gt; "nodejs"
+...</pre></li>
+    </ul>
+
+
+
+    <h2>
+        <a href="#apidoc.element.speakeasy-nlp.sentiment.negativity" id="apidoc.element.speakeasy-nlp.sentiment.negativity">
+        function <span class="apidocSignatureSpan">speakeasy-nlp.sentiment.</span>negativity
+        <span class="apidocSignatureSpan">(phrase)</span>
+        </a>
+    </h2>
+    <ul>
+    <li>description and source-code<pre class="apidocCodePre">function negativity(phrase) {
+  // Cache it
+  var tokens = phrase.toLowerCase().split(' ')
+  var hits = 0
+  var words = []
+
+  tokens.forEach(function (t) {
+    if (negativeWords.indexOf(t) &gt; -1) {
+      hits++
+      words.push(t)
+    }
+  })
+
+  return {
+    score: hits,
+    comparative: hits / tokens.length,
+    words: words
+  }
+}</pre></li>
+    <li>example usage<pre class="apidocCodePre">...
+// Analyze sentences at a basic level
+// ------------------------------------- //
+speak.classify("What is your name?")             //=&gt; { action: "what", owner: "listener", subject
+: "name" }
+speak.classify("Do you know what time it is?")   //=&gt; { action: "what", owner: "it", subject: &amp;#
+x22;time" }
+
+// Sentiment analysis
+// ------------------------------------- //
+speak.sentiment.<span class="apidocCodeKeywordSpan">negativity</span>("I hate your guts")   //=&gt; { score: 1, words
+: [hate] }
+speak.sentiment.positivity("I love you")         //=&gt; { score: 1, words: [love] }
+
+speak.sentiment.analyze("I love you, but you smell something aweful")
+// (Negative scores dictate a stronger influence of negative words)
+//=&gt; { score: -1, positive: { ... }, negative: { ... } }
+
+// Closest word
+...</pre></li>
+    </ul>
+
+
+
+    <h2>
+        <a href="#apidoc.element.speakeasy-nlp.sentiment.positivity" id="apidoc.element.speakeasy-nlp.sentiment.positivity">
+        function <span class="apidocSignatureSpan">speakeasy-nlp.sentiment.</span>positivity
+        <span class="apidocSignatureSpan">(phrase)</span>
+        </a>
+    </h2>
+    <ul>
+    <li>description and source-code<pre class="apidocCodePre">function positivity(phrase) {
+  // Cache it
+  var tokens = phrase.toLowerCase().split(' ')
+  var hits = 0
+  var words = []
+
+  tokens.forEach(function (t) {
+    if (positiveWords.indexOf(t) &gt; -1) {
+      hits++
+      words.push(t)
+    }
+  })
+
+  return {
+    score: hits,
+    comparative: hits / tokens.length,
+    words: words
+  }
+}</pre></li>
+    <li>example usage<pre class="apidocCodePre">...
+// ------------------------------------- //
+speak.classify("What is your name?")             //=&gt; { action: "what", owner: "listener", subject
+: "name" }
+speak.classify("Do you know what time it is?")   //=&gt; { action: "what", owner: "it", subject: &amp;#
+x22;time" }
+
+// Sentiment analysis
+// ------------------------------------- //
+speak.sentiment.negativity("I hate your guts")   //=&gt; { score: 1, words: [hate] }
+speak.sentiment.<span class="apidocCodeKeywordSpan">positivity</span>("I love you")         //=&gt; { score: 1, words
+: [love] }
+
+speak.sentiment.analyze("I love you, but you smell something aweful")
+// (Negative scores dictate a stronger influence of negative words)
+//=&gt; { score: -1, positive: { ... }, negative: { ... } }
+
+// Closest word
+// ------------------------------------- //
+...</pre></li>
+    </ul>
+
+
+</div>
+
+<div class="apidocFooterDiv">
+    [ this document was created with
+    <a href="https://github.com/kaizhu256/node-utility2" target="_blank">utility2</a>
+    ]
+</div>
+</div>
+</body></html>

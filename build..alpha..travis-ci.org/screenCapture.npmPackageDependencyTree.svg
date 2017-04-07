@@ -1,0 +1,8 @@
+<svg height="78" width="720" xmlns="http://www.w3.org/2000/svg">
+<rect height="78" fill="#555" width="720"></rect>
+<text fill="#7f7" font-family="Courier New" font-size="12" xml:space="preserve">
+<tspan x="10" y="26">5 megabytes</tspan>
+<tspan x="10" y="42">└─┬ speakeasy-nlp@0.2.12 </tspan>
+<tspan x="10" y="58">  └── levenshtein@1.0.5</tspan>
+</text>
+</svg>
